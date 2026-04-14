@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { FileText, Trash2, X, Calendar, FileType } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { NoteSearch } from '@/components/NoteSearch';
+import { useNoteFilter } from '@/hooks/useNoteFilter';
+import { parseTimestamp } from '@/lib/timestamps';
 
 interface NoteHistoryProps {
     isOpen: boolean;
     onClose: () => void;
+    onJumpToTimestamp: (videoId: string, seconds: number) => void;
 }
 
 interface StoredNote {
@@ -14,14 +19,20 @@ interface StoredNote {
     content: string;
     title: string;
     updatedAt: string;
+    createdAt?: string;
     videoId: string;
 }
 
 const NOTES_PREFIX = 'video_notes_';
 
-export const NoteHistory = ({ isOpen, onClose }: NoteHistoryProps) => {
+export const NoteHistory = ({ isOpen, onClose, onJumpToTimestamp }: NoteHistoryProps) => {
     const [notes, setNotes] = useState<StoredNote[]>([]);
     const [selectedNote, setSelectedNote] = useState<StoredNote | null>(null);
+    const [query, setQuery] = useState('');
+    const [sortBy, setSortBy] = useState<'updated' | 'created' | 'relevance'>('updated');
+    const [videoIdFilter, setVideoIdFilter] = useState('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
 
     const loadNotes = () => {
         const loadedNotes: StoredNote[] = [];
@@ -32,7 +43,7 @@ export const NoteHistory = ({ isOpen, onClose }: NoteHistoryProps) => {
                     const raw = localStorage.getItem(key);
                     if (raw) {
                         // Handle both old string format and new JSON format
-                        let data: { content?: string; title?: string; updatedAt?: string; videoId?: string } | string;
+                        let data: { content?: string; title?: string; updatedAt?: string; createdAt?: string; videoId?: string } | string;
                         try {
                             data = JSON.parse(raw);
                         } catch {
@@ -43,6 +54,7 @@ export const NoteHistory = ({ isOpen, onClose }: NoteHistoryProps) => {
                         const content = typeof data === 'string' ? data : data.content;
                         const title = typeof data === 'string' ? 'Untitled Note' : data.title;
                         const updatedAt = typeof data === 'string' ? new Date().toISOString() : data.updatedAt;
+                        const createdAt = typeof data === 'string' ? updatedAt : data.createdAt;
                         const videoId = typeof data === 'string' ? key.replace(NOTES_PREFIX, '') : data.videoId;
 
                         if (content) {
@@ -51,6 +63,7 @@ export const NoteHistory = ({ isOpen, onClose }: NoteHistoryProps) => {
                                 content: content,
                                 title: title || 'Untitled Note',
                                 updatedAt: updatedAt || new Date().toISOString(),
+                                createdAt: createdAt || updatedAt || new Date().toISOString(),
                                 videoId: videoId || key.replace(NOTES_PREFIX, '')
                             });
                         }
@@ -105,6 +118,66 @@ export const NoteHistory = ({ isOpen, onClose }: NoteHistoryProps) => {
         URL.revokeObjectURL(url);
     };
 
+    const filteredNotes = useNoteFilter(notes, {
+        query,
+        sortBy,
+        videoId: videoIdFilter,
+        dateFrom,
+        dateTo,
+    });
+
+    const videoOptions = useMemo(() => {
+        const seen = new Map<string, string>();
+        notes.forEach((note) => {
+            if (!seen.has(note.videoId)) {
+                seen.set(note.videoId, note.title);
+            }
+        });
+
+        return Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
+    }, [notes]);
+
+    const renderContentWithTimestamps = (note: StoredNote) => {
+        const content = note.content;
+        const parts: ReactNode[] = [];
+        const regex = /@\s?(\d{1,2}:\d{2}(?::\d{2})?)/g;
+        let lastIndex = 0;
+        let match: RegExpExecArray | null;
+
+        while ((match = regex.exec(content)) !== null) {
+            const [fullMatch, timestamp] = match;
+            const offset = match.index;
+            if (offset > lastIndex) {
+                parts.push(content.slice(lastIndex, offset));
+            }
+
+            const seconds = parseTimestamp(timestamp);
+            parts.push(
+                <button
+                    key={`${note.key}-${offset}`}
+                    type="button"
+                    onClick={() => {
+                        if (seconds !== null) {
+                            onJumpToTimestamp(note.videoId, seconds);
+                            onClose();
+                        }
+                    }}
+                    className="mx-1 inline-flex items-center rounded-full border border-vex-primary/40 bg-vex-primary/10 px-2 py-0.5 text-xs font-semibold text-vex-primary hover:bg-vex-primary/20"
+                >
+                    {fullMatch.trim()}
+                </button>
+            );
+
+            lastIndex = offset + fullMatch.length;
+        }
+
+        if (lastIndex < content.length) {
+            parts.push(content.slice(lastIndex));
+        }
+
+        return parts.length > 0 ? parts : content;
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -115,15 +188,28 @@ export const NoteHistory = ({ isOpen, onClose }: NoteHistoryProps) => {
                 <div className="w-1/3 border-r border-gray-700 flex flex-col">
                     <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-[#1e1e1e]">
                         <h2 className="text-xl font-semibold text-gray-200">Your Notes</h2>
-                        <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full">{notes.length}</span>
+                        <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded-full">{filteredNotes.length}</span>
                     </div>
+                    <NoteSearch
+                        query={query}
+                        onQueryChange={setQuery}
+                        sortBy={sortBy}
+                        onSortByChange={setSortBy}
+                        videoId={videoIdFilter}
+                        onVideoChange={setVideoIdFilter}
+                        dateFrom={dateFrom}
+                        onDateFromChange={setDateFrom}
+                        dateTo={dateTo}
+                        onDateToChange={setDateTo}
+                        videoOptions={videoOptions}
+                    />
                     <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                        {notes.length === 0 ? (
+                        {filteredNotes.length === 0 ? (
                             <div className="text-center py-10 text-gray-500">
                                 <p>No notes found.</p>
                             </div>
                         ) : (
-                            notes.map(note => (
+                            filteredNotes.map(note => (
                                 <div
                                     key={note.key}
                                     onClick={() => setSelectedNote(note)}
@@ -180,7 +266,7 @@ export const NoteHistory = ({ isOpen, onClose }: NoteHistoryProps) => {
                                     Last updated: {new Date(selectedNote.updatedAt).toLocaleString()}
                                 </p>
                                 <div className="prose prose-invert max-w-none text-gray-300 whitespace-pre-wrap font-mono text-sm">
-                                    {selectedNote.content}
+                                    {renderContentWithTimestamps(selectedNote)}
                                 </div>
                             </div>
                         ) : (

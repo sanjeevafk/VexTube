@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Trash2, Play, Clock, PenLine, Home, ArrowLeft } from 'lucide-react';
@@ -14,8 +14,19 @@ import { NoteHistory } from '@/components/NoteHistory';
 import { NoteTaker } from '@/components/NoteTaker';
 import { AuthButton } from '@/components/auth-button';
 import { ResizableSidebar } from '@/components/ResizableSidebar';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { ShortcutsHelp } from '@/components/ShortcutsHelp';
 
 export default function AppPage() {
+    const playerRef = useRef<{
+        getPlayerState?: () => number;
+        playVideo?: () => void;
+        pauseVideo?: () => void;
+        seekTo?: (seconds: number, allowSeekAhead?: boolean) => void;
+        getCurrentTime?: () => number;
+    } | null>(null);
+    const noteInputRef = useRef<HTMLTextAreaElement | null>(null);
+
     const [playlistData, setPlaylistData] = useState<PlaylistData>({
         videos: [],
         currentIndex: 0,
@@ -33,6 +44,8 @@ export default function AppPage() {
     const [activeNav, setActiveNav] = useState<'player' | 'history' | 'notes'>('player');
     const [rightSidebarWidth, setRightSidebarWidth] = useState(320);
     const [isResizingRight, setIsResizingRight] = useState(false);
+    const [shortcutsOpen, setShortcutsOpen] = useState(false);
+    const [pendingSeek, setPendingSeek] = useState<{ videoId: string; seconds: number } | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -171,6 +184,44 @@ export default function AppPage() {
         }));
     }, []);
 
+    const handlePlayerReady = useCallback((player: {
+        getPlayerState?: () => number;
+        playVideo?: () => void;
+        pauseVideo?: () => void;
+        seekTo?: (seconds: number, allowSeekAhead?: boolean) => void;
+        getCurrentTime?: () => number;
+    }) => {
+        playerRef.current = player;
+    }, []);
+
+    const togglePlay = useCallback(() => {
+        const player = playerRef.current;
+        if (!player) return;
+        const state = player.getPlayerState?.();
+        if (state === 1) {
+            player.pauseVideo?.();
+        } else {
+            player.playVideo?.();
+        }
+    }, []);
+
+    const handleJumpToTimestamp = useCallback((videoId: string, seconds: number) => {
+        if (playlistData.videos.length === 0) return;
+        const targetIndex = playlistData.videos.findIndex((video) => video.id === videoId);
+        if (targetIndex === -1) return;
+
+        if (playlistData.videos[playlistData.currentIndex]?.id === videoId) {
+            playerRef.current?.seekTo?.(seconds, true);
+            return;
+        }
+
+        setPendingSeek({ videoId, seconds });
+        setPlaylistData((prev) => ({
+            ...prev,
+            currentIndex: targetIndex,
+        }));
+    }, [playlistData.currentIndex, playlistData.videos]);
+
     const handleClearData = useCallback(() => {
         clearStorage();
         setPlaylistData({
@@ -188,6 +239,31 @@ export default function AppPage() {
         [playlistData.videos, playlistData.currentIndex]);
 
     const hasVideos = playlistData.videos.length > 0;
+
+    useEffect(() => {
+        if (!pendingSeek || !currentVideo || currentVideo.id !== pendingSeek.videoId) return;
+        playerRef.current?.seekTo?.(pendingSeek.seconds, true);
+        setPendingSeek(null);
+    }, [currentVideo, pendingSeek]);
+
+    useKeyboardShortcuts({
+        goToNextVideo: () => {
+            if (!hasVideos) return;
+            handleVideoSelect(Math.min(playlistData.videos.length - 1, playlistData.currentIndex + 1));
+        },
+        goToPreviousVideo: () => {
+            if (!hasVideos) return;
+            handleVideoSelect(Math.max(0, playlistData.currentIndex - 1));
+        },
+        togglePlay,
+        toggleFullscreen: () => handleFullscreenChange(!playlistData.isFullscreen),
+        focusNoteInput: () => noteInputRef.current?.focus(),
+        toggleNotesSidebar: () => {
+            if (!hasVideos) return;
+            setActiveNav((prev) => (prev === 'notes' ? 'player' : 'notes'));
+        },
+        showShortcutsHelp: () => setShortcutsOpen(true),
+    });
 
     if (!mounted) {
         return null;
@@ -233,6 +309,8 @@ export default function AppPage() {
                                 <NoteTaker
                                     videoId={currentVideo.id}
                                     videoTitle={currentVideo.title}
+                                    inputRef={noteInputRef}
+                                    onRequestTimestamp={() => playerRef.current?.getCurrentTime?.() ?? null}
                                 />
                             </div>
                         </div>
@@ -350,6 +428,7 @@ export default function AppPage() {
                                     onFullscreenChange={handleFullscreenChange}
                                     cinemaMode={cinemaMode}
                                     onCinemaModeToggle={() => setCinemaMode(!cinemaMode)}
+                                    onPlayerReady={handlePlayerReady}
                                 />
                             </div>
 
@@ -500,6 +579,12 @@ export default function AppPage() {
                     setShowHistory(false);
                     setActiveNav('player');
                 }}
+                onJumpToTimestamp={handleJumpToTimestamp}
+            />
+
+            <ShortcutsHelp
+                isOpen={shortcutsOpen}
+                onClose={() => setShortcutsOpen(false)}
             />
         </div>
     );

@@ -1,26 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent, RefObject } from 'react';
 import { FileText, Save, FileType, ChevronDown } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { TimestampCapture } from '@/components/TimestampCapture';
+import { formatTimestamp } from '@/lib/timestamps';
 
 interface NoteTakerProps {
     videoId: string;
     videoTitle: string;
+    inputRef?: RefObject<HTMLTextAreaElement | null>;
+    onRequestTimestamp?: () => number | null;
 }
 
 interface NoteData {
     content: string;
     title: string;
     updatedAt: string;
+    createdAt?: string;
     videoId: string;
 }
 
 const NOTES_STORAGE_KEY = 'video_notes_';
 
-export const NoteTaker = ({ videoId, videoTitle }: NoteTakerProps) => {
+export const NoteTaker = ({ videoId, videoTitle, inputRef, onRequestTimestamp }: NoteTakerProps) => {
+    const internalInputRef = useRef<HTMLTextAreaElement>(null);
+    const resolvedInputRef = inputRef ?? internalInputRef;
     const [notes, setNotes] = useState<string>(() => {
         if (typeof window === 'undefined') return '';
         const savedData = localStorage.getItem(`${NOTES_STORAGE_KEY}${videoId}`);
@@ -34,10 +42,21 @@ export const NoteTaker = ({ videoId, videoTitle }: NoteTakerProps) => {
         }
         return '';
     });
+    const [createdAt] = useState<string>(() => {
+        if (typeof window === 'undefined') return new Date().toISOString();
+        const savedData = localStorage.getItem(`${NOTES_STORAGE_KEY}${videoId}`);
+        if (!savedData) return new Date().toISOString();
+        try {
+            const parsed: NoteData = JSON.parse(savedData);
+            return parsed.createdAt || parsed.updatedAt || new Date().toISOString();
+        } catch {
+            return new Date().toISOString();
+        }
+    });
     const [saved, setSaved] = useState(true);
     const [saveMessage, setSaveMessage] = useState('');
 
-    const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const handleNotesChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setNotes(e.target.value);
         setSaved(false);
         setSaveMessage('');
@@ -48,10 +67,40 @@ export const NoteTaker = ({ videoId, videoTitle }: NoteTakerProps) => {
             content: notes,
             title: videoTitle,
             updatedAt: new Date().toISOString(),
+            createdAt,
             videoId
         };
         localStorage.setItem(`${NOTES_STORAGE_KEY}${videoId}`, JSON.stringify(noteData));
         setSaved(true);
+    };
+
+    const insertTimestamp = (timestamp: string) => {
+        const textarea = resolvedInputRef.current;
+        if (!textarea) {
+            setNotes((prev) => `${prev}${prev.endsWith(' ') || prev.length === 0 ? '' : ' '}${timestamp}`);
+            return;
+        }
+
+        const start = textarea.selectionStart ?? notes.length;
+        const end = textarea.selectionEnd ?? notes.length;
+        const before = notes.slice(0, start);
+        const after = notes.slice(end);
+        const nextValue = `${before}${timestamp}${after}`;
+
+        setNotes(nextValue);
+        requestAnimationFrame(() => {
+            textarea.focus();
+            const cursor = start + timestamp.length;
+            textarea.setSelectionRange(cursor, cursor);
+        });
+    };
+
+    const handleCaptureTimestamp = () => {
+        const seconds = onRequestTimestamp?.();
+        if (seconds === null || seconds === undefined) return;
+        const formatted = formatTimestamp(seconds);
+        insertTimestamp(`@ ${formatted}`);
+        setSaved(false);
     };
 
     const handleSaveLocally = () => {
@@ -114,6 +163,11 @@ export const NoteTaker = ({ videoId, videoTitle }: NoteTakerProps) => {
                     <span className="font-semibold text-white whitespace-nowrap">My Notes</span>
                 </div>
 
+                <TimestampCapture
+                    onCapture={handleCaptureTimestamp}
+                    disabled={!onRequestTimestamp}
+                />
+
                 {/* Save Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -161,6 +215,7 @@ export const NoteTaker = ({ videoId, videoTitle }: NoteTakerProps) => {
                 value={notes}
                 onChange={handleNotesChange}
                 placeholder="Write your notes here..."
+                ref={resolvedInputRef}
                 className="flex-1 min-h-[300px] font-mono text-sm resize-none bg-vex-surface border-vex-border text-white placeholder:text-vex-muted/50 focus:border-vex-primary focus:ring-1 focus:ring-vex-primary/30"
             />
         </div>

@@ -21,7 +21,17 @@ interface VideoPlayerProps {
     onFullscreenChange: (isFullscreen: boolean) => void;
     cinemaMode: boolean;
     onCinemaModeToggle: () => void;
+    onPlayerReady?: (player: YouTubePlayer) => void;
 }
+
+type YouTubePlayer = {
+    setPlaybackRate: (rate: number) => void;
+    getPlayerState?: () => number;
+    playVideo?: () => void;
+    pauseVideo?: () => void;
+    seekTo?: (seconds: number, allowSeekAhead?: boolean) => void;
+    getCurrentTime?: () => number;
+};
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
@@ -39,8 +49,9 @@ export const VideoPlayer = ({
     onFullscreenChange,
     cinemaMode,
     onCinemaModeToggle,
+    onPlayerReady,
 }: VideoPlayerProps) => {
-    const [player, setPlayer] = useState<{ setPlaybackRate: (rate: number) => void } | null>(null);
+    const [player, setPlayer] = useState<YouTubePlayer | null>(null);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -75,9 +86,10 @@ export const VideoPlayer = ({
         }
     };
 
-    const handleReady = (event: { target: { setPlaybackRate: (rate: number) => void } }) => {
+    const handleReady = (event: { target: YouTubePlayer }) => {
         setPlayer(event.target);
         event.target.setPlaybackRate(playbackSpeed);
+        onPlayerReady?.(event.target);
     };
 
     const handleSpeedChange = (speed: number) => {
