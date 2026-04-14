@@ -170,4 +170,4 @@ All data is stored locally in the browser:
 
 ## License
 
-This is a personal project. All rights reserved.
+MIT
