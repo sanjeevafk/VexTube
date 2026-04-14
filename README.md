@@ -1,74 +1,100 @@
 # VexTube
 
-A focused YouTube learning platform designed for distraction-free video consumption and note-taking.
+A local-first YouTube learning studio for focused viewing, structured notes, and deliberate review.
 
-## Overview
+## Summary
 
-VexTube is a web application that enhances the YouTube learning experience by removing distractions and providing tools for effective learning. It supports both individual videos and full playlists, with features for progress tracking and comprehensive note-taking.
+- Distraction-free player with progress tracking and cinema mode.
+- Fast note-taking with timestamps, search, and export.
+- Review mode with spaced repetition, plus focus timer and stats.
+- Collections and favorites to organize playlists.
+- Everything stays on-device by default.
 
 ## Features
 
-### Core Functionality
-- Single video and playlist support via YouTube URLs
-- Embedded YouTube player with custom controls
-- Progress tracking with completion status
-- Playback speed control (0.5x to 2x)
-- Cinema mode for distraction-free viewing
-- Fullscreen support
+### Learning Workflow
+- Playlist and single video support via URL
+- Progress tracking with completion states
+- Playback speed presets and fullscreen
+- Cinema mode for minimal distractions
+- Keyboard shortcuts for core actions
 
-### Rich Content Support
-- Rich text rendering with Markdown support
-- Mathematical formula rendering with KaTeX
-- Code syntax highlighting
+### Notes and Knowledge
+- Per-video notes stored locally
+- Timestamp capture and jump-to-time
+- Live search, filters, and sorting
+- Export notes as PDF, TXT, or Markdown
 
-### Note-Taking
-- Per-video note storage
-- Markdown support in notes
-- Export to PDF and TXT formats
-- Note history with search and management
-- Auto-save functionality
+### Review and Focus
+- Review mode with spaced repetition ratings
+- Focus timer with work and break cycles
+- Stats dashboard for completion and notes
 
-### User Interface
-- Modern dark theme with glassmorphism effects
-- Responsive design for mobile and desktop
-- Smooth animations and transitions
-- Accessible UI components using Radix UI
+### Organization
+- Playlist naming prompt on first load
+- Collections with favorites and assignment
+- Quick open for the current playlist
+
+## Architecture
+
+VexTube is local-first. The only server activity is the YouTube metadata proxy. All learning data, notes, and review state live in the browser.
+
+```mermaid
+flowchart LR
+    UI[Next.js App Router UI]
+    LS[(LocalStorage)]
+    API[/Route Handlers: /api/youtube/*/]
+    YT[YouTube Data API]
+    Player[YouTube IFrame Player]
+
+    UI --> LS
+    UI --> Player
+    UI -->|fetch| API
+    API --> YT
+```
+
+```mermaid
+flowchart TD
+    NoteTaker[Note Taker] --> Notes[(Local Notes)]
+    Notes --> Review[Review Mode]
+    Notes --> Export[Exporters]
+    Notes --> Stats[Stats Dashboard]
+    Review --> Ratings[(Spaced Repetition Data)]
+```
 
 ## Technology Stack
 
 ### Framework
-- Next.js 16.1.1 with Turbopack
+- Next.js 16.1.1 (App Router)
 - React 19.2.3
 - TypeScript 5.x
 
 ### Styling
 - Tailwind CSS 4.x
-- Radix UI components
-- Custom glassmorphism effects
+- Radix UI primitives
 
-### APIs & Services
-- YouTube Data API v3 for video metadata (server-side only)
-- LocalStorage for all data persistence
+### APIs and Storage
+- YouTube Data API v3 via server routes
+- LocalStorage for all user data
 
 ### Key Libraries
-- react-youtube for video embedding
-- react-markdown for rich text rendering
-- rehype-katex for mathematical formulas
-- react-syntax-highlighter for code blocks
-- jsPDF for PDF export
+- react-youtube
+- react-markdown, rehype-katex
+- react-syntax-highlighter
+- jsPDF
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js 18.x or higher
-- npm, yarn, pnpm, or bun
+- npm, pnpm, yarn, or bun
 
 ### Environment Variables
 
 Create a `.env.local` file in the root directory:
 
 ```env
-# YouTube API (Server-side only - do NOT use NEXT_PUBLIC prefix)
+# YouTube API (server-side only, do NOT use NEXT_PUBLIC)
 YOUTUBE_API_KEY=your_youtube_api_key
 ```
 
@@ -83,8 +109,6 @@ npm install
 ```bash
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Production Build
 
@@ -104,78 +128,46 @@ npm run lint
 ```
 src/
 ├── app/
-│   ├── api/                  # Server-side API routes
+│   ├── api/                  # Server-only route handlers
 │   │   └── youtube/          # YouTube API proxy routes
 │   ├── page.tsx              # Landing page
 │   ├── app/page.tsx          # Main application
 │   ├── layout.tsx            # Root layout
 │   └── globals.css           # Global styles
 ├── components/
-│   ├── VideoPlayer.tsx       # Video player with controls
+│   ├── VideoPlayer.tsx       # Player with controls
 │   ├── NoteTaker.tsx         # Note-taking interface
-│   ├── NoteHistory.tsx       # Note management
-│   ├── PlaylistSidebar.tsx   # Video list navigation
-│   └── ui/                   # Reusable UI components
+│   ├── ReviewMode.tsx        # Spaced repetition review
+│   ├── CollectionManager.tsx # Playlist organization
+│   ├── FocusTimer.tsx        # Pomodoro timer
+│   ├── StatsDashboard.tsx    # Progress stats
+│   └── ui/                   # Radix UI wrappers
 └── lib/
-    ├── youtube.ts            # YouTube client (calls server routes)
+    ├── youtube.ts            # YouTube client (server routes)
     ├── storage.ts            # LocalStorage utilities
+    ├── notes.ts              # Note loading helpers
     └── types.ts              # TypeScript definitions
 ```
 
-## API Keys Setup
-
-### YouTube Data API v3
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable the YouTube Data API v3
-4. Create credentials (API key)
-5. Restrict the API key to YouTube Data API v3
-6. Add the key to `.env.local` as `YOUTUBE_API_KEY` (NOT `NEXT_PUBLIC_`)
-
-> **Important**: The YouTube API key is used server-side only to prevent exposure in client bundles.
-
 ## Data Storage
 
-All data is stored locally in the browser (no server storage):
-- Video progress and completion status
-- Playback settings (speed, dark mode)
-- Personal notes with timestamps
-- Playlist state and current position
+All data is stored locally in the browser:
+- Video progress and completion state
+- Playback settings and player position
+- Notes, timestamps, and review ratings
+- Collections, favorites, and playlist metadata
 
-## Browser Compatibility
+## Performance Notes
 
-- Chrome/Edge: Fully supported
-- Firefox: Fully supported
-- Safari: Fully supported
-- Mobile browsers: Responsive design supported
-
-## Performance
-
-- First load optimized with code splitting
-- Lazy loading for YouTube player component
-- Throttled LocalStorage writes (1000ms)
-- Memoized components for efficient re-renders
-- Server-side API caching for YouTube data
+- Lazy-loaded YouTube player
+- Throttled LocalStorage writes
+- Memoized components for large lists
 
 ## Known Limitations
 
-- YouTube API has daily quota limits (10,000 units/day on free tier)
-- LocalStorage has size limits (typically 5-10MB)
-
-## Future Roadmap
-
-- Enhanced gamification features
-- Advanced note organization
-- Social learning features
+- YouTube API has daily quota limits
+- LocalStorage is typically limited to 5 to 10MB
 
 ## License
 
 This is a personal project. All rights reserved.
-
-## Acknowledgments
-
-- Built with Next.js and React
-- UI components from Radix UI
-- Icons from Lucide React
-- Video data from YouTube Data API
