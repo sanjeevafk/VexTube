@@ -57,10 +57,10 @@ export default function LandingPage() {
                         </Link>
 
                         <Link
-                            href="/login"
+                            href="/privacy"
                             className="h-12 px-8 rounded-lg bg-vex-surface border border-vex-border hover:border-white/50 text-white font-medium flex items-center justify-center transition-all"
                         >
-                            Sign In
+                            Privacy
                         </Link>
                     </div>
 
