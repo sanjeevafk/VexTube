@@ -1,7 +1,7 @@
 {
   "functions": {
     "backend/app.rb": {
-      "runtime": "@vercel/ruby"
+      "runtime": "@vercel/ruby@latest"
     }
   }
 }
