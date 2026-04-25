@@ -1,11 +1,11 @@
 {
   "functions": {
-    "backend/api/index.rb": {
+    "api/index.rb": {
       "runtime": "@vercel/ruby@1.4.0"
     }
   },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/backend/api/index.rb" },
-    { "src": "/auth/(.*)", "dest": "/backend/api/index.rb" }
+    { "src": "/api/(.*)", "dest": "/api/index.rb" },
+    { "src": "/auth/(.*)", "dest": "/api/index.rb" }
   ]
 }
