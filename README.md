@@ -76,5 +76,15 @@ The `fullstack/web/vercel.json` file uses the `functions` property to configure 
 - `ruby/`: (Legacy) Historical server-side templates.
 - `typescript/`: (Legacy) Historical local-storage MVP.
 
----
+## Deployment & Implementation Notes
+
+This repository contains multiple iterations of the project, reflecting different technical approaches explored during development.
+
+* **`typescript/`** – the original standalone MVP and the current live deployment. This version was built first and remains the most stable production-ready implementation.
+* **`ruby/`** – an experimental reimplementation created to explore the Ruby ecosystem, backend patterns, and alternative architecture decisions.
+* **`fullstack/web/`** – a later hybrid version combining a Ruby API layer with a TypeScript/Next.js frontend to evaluate a mixed-stack full-stack approach.
+
+For deployment, the standalone TypeScript implementation was selected because it provides the most reliable and straightforward production path on Vercel with minimal runtime complexity.
+
+The Ruby and hybrid implementations are retained in the monorepo as engineering explorations that demonstrate comparative stack evaluation, architectural iteration, and willingness to test tradeoffs rather than commit blindly to a single approach.
 
