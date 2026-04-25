@@ -1,7 +1,7 @@
 {
   "functions": {
     "backend/api/index.rb": {
-      "runtime": "@vercel/ruby"
+      "runtime": "@vercel/ruby@1.4.0"
     }
   },
   "routes": [
