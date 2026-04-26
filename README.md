@@ -1,90 +1,74 @@
-# FocusTube (Ytwins) — Learning, Optimized.
+# FocusTube
 
-FocusTube is a dual-language (Ruby + TypeScript) full-stack application that helps users turn YouTube learning into retained knowledge through distraction-free watching, timestamped notes, and spaced review.
+FocusTube is a local-first YouTube learning workspace for distraction-free playback, timestamped notes, and spaced review.
 
-## Why Built?
-YouTube is the world's largest classroom, but it's also the world's largest distraction engine. FocusTube was built to provide a dedicated environment for deep learning, stripping away recommendations and comments while adding powerful tools for active recall and spaced repetition.
 
-## The Stack
-- **Frontend**: Next.js 15 (App Router) with React 19, Tailwind CSS, and Lucide icons.
-- **Backend**: Ruby & Sinatra (modular API) with Sequel ORM.
-- **Persistence**: Turso (libSQL) for edge-optimized relational data.
-- **Authentication**: Google OAuth 2.0 for secure, seamless login.
-- **Deployment**: Vercel (Unified Next.js + Ruby Serverless).
 
-## Key Features
-- **Distraction-Free Player**: Watch YouTube without the "up next" noise.
-- **Timestamped Note-Taking**: Capture ideas at the exact moment they happen in the video.
-- **Spaced Review (SM-2)**: An integrated spaced-repetition algorithm that surfaces notes for review just as you're about to forget them.
-- **Collection Management**: Organize your learning resources into logical groups.
-- **Cloud Sync**: All your notes and progress are synced across devices.
+## What Is Actually Deployed
+- A Next.js App Router frontend (`app/`) running on Vercel.
+- YouTube metadata requests are proxied through Next.js route handlers.
+- User data (notes, review state, playlist metadata) is stored in browser LocalStorage.
 
-## Architectural Tradeoffs
-- **Sinatra vs Rails**: Chose Sinatra for a lightweight, intentional API surface that doesn't overcomplicate the small feature set.
-- **Turso/libSQL**: Opted for Turso to keep the database close to the edge, ensuring snappy responses for global users.
-- **HTTP-Only Cookies**: Prioritized security by using server-side session management over JWTs to avoid XSS risks.
+## Real Stack
+- Framework: Next.js 16 + React 19 + TypeScript
+- Styling/UI: Tailwind CSS + Radix UI primitives
+- Database: None (no server-side database in production)
+- Authentication: None (no user accounts or login flow)
+- External API: YouTube Data API v3 (server-side proxy routes)
 
-## Setup
-
-### Local Development
-The easiest way to start both the backend and frontend is to use the unified dev script:
+## Run Locally
 ```bash
-./dev.sh
-```
-
-Alternatively, you can run them separately:
-
-**Backend:**
-```bash
-cd fullstack/web/backend
-bundle install
-bundle exec rackup -p 4567
-```
-
-**Frontend:**
-```bash
-cd fullstack/web
+cd app
 npm install
+```
+
+Create `app/.env.local`:
+```env
+YOUTUBE_API_KEY=your_youtube_api_key
+```
+
+Start:
+```bash
 npm run dev
 ```
 
-### Docker (Recommended for Production/Testing)
-If you have Docker and Docker Compose installed, you can start the entire stack with a single command:
+## Lessons Learned
+- Vercel deployment initially broke when YouTube API calls were attempted from the client. That exposed key-handling risk and caused CORS-related failures. I fixed it by moving API access into server route handlers and using server-only env vars.
+- The hybrid backend approach was abandoned because it increased operational complexity (extra deployment surface, extra config, slower iteration) without improving the core learning workflow for this MVP.
+- If I started over, I would still ship local-first first, but I would design a clear migration path from day one for accounts, sync, and conflict handling so the jump to multi-device support is smoother.
 
-```bash
-docker-compose up --build
-```
+## Engineering Decisions
 
-This will:
-- Spin up the Ruby API on port `4567`
-- Spin up the Next.js Frontend on port `3000`
-- Persist your local database in `fullstack/web/backend/db`
+### 1) Session Security Model (archived hybrid experiment)
+- **Decision:** Use server-managed sessions with HTTP-only cookies instead of JWTs stored in browser-accessible storage.
+- **Alternatives considered:** JWT access tokens in localStorage/sessionStorage, or JWT-in-cookie with stateless auth.
+- **Why this won:** HTTP-only cookies reduce XSS blast radius because JavaScript cannot read the session token directly; for the server-rendered/hybrid flow this was the safer default.
+- **Tradeoff:** Added server-side session state and CSRF considerations; less horizontally simple than fully stateless JWT auth.
 
-## Deployment (Vercel)
-When deploying this monorepo to Vercel, it's crucial that you configure it correctly to avoid hitting the Serverless Function limits on the Hobby plan:
+### 2) Deployment Target
+- **Decision:** Deploy the TypeScript/Next.js app as production (`vextube.vercel.app`) and archive the hybrid stack.
+- **Alternatives considered:** Ship the Ruby + Next.js hybrid on Vercel as the primary production path.
+- **Why this won:** The Next.js-only deployment was more reliable on Vercel, avoided extra cold-start/runtime coordination, and cut configuration/operational complexity.
+- **Tradeoff:** No server-backed user model in production (no accounts/sync), so functionality is intentionally local-first.
 
-1. **Root Directory**: Set the Root Directory to `fullstack/web` in Vercel.
-2. **Framework Preset**: Vercel will auto-detect "Next.js". Leave it as is.
-3. **Build Command**: Leave blank. Vercel will build Next.js natively.
+### 3) Spaced Repetition Algorithm
+- **Decision:** Use SM-2 style scheduling for review timing.
+- **Alternatives considered:** More complex modern schedulers (FSRS variants), custom tuning, or ML-personalized ranking.
+- **Why this won:** SM-2 is simple, well-understood, and easy to reason about/debug for an MVP; it delivered predictable behavior without introducing model complexity.
+- **Tradeoff:** Scheduling is less adaptive than newer data-driven approaches and may be suboptimal for edge learning patterns.
 
-**How it works:**
-The `fullstack/web/vercel.json` file uses the `functions` property to configure the Ruby backend (`backend/app.rb`). Because the Next.js app is the root directory in Vercel, Next.js handles routing and natively deploys to `/` without breaking client-side navigation. The Next.js config (`next.config.ts`) rewrites API calls to the Ruby backend serverless function.
+### 4) Data Layer / ORM
+- **Decision:** No ORM in the deployed app because there is no server-side database; in archived backend experiments, Sequel was used.
+- **Alternatives considered:** Add a production DB + ORM now (Prisma/Drizzle/Sequelize in TS stack), or use lower-level SQL access in Ruby.
+- **Why this won:** For the deployed product, localStorage removed backend persistence complexity entirely. In experiments, Sequel provided a lightweight Ruby ORM with straightforward SQL control and good fit for SQLite/libSQL prototyping.
+- **Tradeoff:** Deployed app sacrifices cross-device durability/query power; experimental ORM path added backend maintenance overhead not justified for the MVP timeline.
 
-## Repository Structure
-- `fullstack/web`: The Next.js frontend application.
-- `fullstack/web/backend`: The Ruby backend logic and database models.
-- `ruby/`: (Legacy) Historical server-side templates.
-- `typescript/`: (Legacy) Historical local-storage MVP.
+## Known Limitations
+- This is MVP-quality for personal/local usage, not production-grade collaboration software.
+- No auth, no multi-device sync, no shared/team features.
+- "Cloud sync" is not implemented in the deployed app; all state is local browser storage only.
+- LocalStorage capacity and browser clearing can cause data loss; there is no automated backup.
+- Some roadmap ideas in the UI/docs are aspirational and not fully implemented end-to-end yet.
 
-## Deployment & Implementation Notes
-
-This repository contains multiple iterations of the project, reflecting different technical approaches explored during development.
-
-* **`typescript/`** – the original standalone MVP and the current live deployment. This version was built first and remains the most stable production-ready implementation.
-* **`ruby/`** – an experimental reimplementation created to explore the Ruby ecosystem, backend patterns, and alternative architecture decisions.
-* **`fullstack/web/`** – a later hybrid version combining a Ruby API layer with a TypeScript/Next.js frontend to evaluate a mixed-stack full-stack approach.
-
-For deployment, the standalone TypeScript implementation was selected because it provides the most reliable and straightforward production path on Vercel with minimal runtime complexity.
-
-The Ruby and hybrid implementations are retained in the monorepo as engineering explorations that demonstrate comparative stack evaluation, architectural iteration, and willingness to test tradeoffs rather than commit blindly to a single approach.
-
+## Experiments (Archived)
+I explored Ruby/Sinatra and a hybrid stack. Those experiments are archived in `experiments/` with their own README.
