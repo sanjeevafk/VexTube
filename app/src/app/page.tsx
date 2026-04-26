@@ -26,21 +26,21 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Image
-                            src="/logo.jpg"
-                            alt="VexTube Logo"
+                            src="/logo.png"
+                            alt="FocusTube Logo"
                             width={32}
                             height={32}
                             className="rounded-lg"
                         />
-                        <span className="text-lg tracking-[0.2em] uppercase text-white font-semibold">VexTube</span>
+                        <span className="text-lg tracking-[0.2em] uppercase text-white font-semibold">FocusTube</span>
                     </div>
                     <div className="hidden sm:flex items-center gap-4">
                         <Link
-                            href="https://github.com/sanjeevafk/VexTube"
+                            href="https://github.com/sanjeevafk/ytwins"
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-vex-border text-vex-muted hover:text-white hover:border-white/60 transition-colors"
-                            aria-label="VexTube GitHub repository"
+                            aria-label="FocusTube GitHub repository"
                         >
                             <Github className="w-4 h-4" />
                         </Link>
@@ -82,7 +82,7 @@ export default function LandingPage() {
                         <span className="block text-vex-primary">study flow.</span>
                     </h1>
                     <p className="mt-6 text-base sm:text-lg text-vex-muted max-w-2xl mx-auto leading-relaxed">
-                        VexTube is a distraction-free YouTube workspace with structured notes, review mode,
+                        FocusTube is a distraction-free YouTube workspace with structured notes, review mode,
                         and focus tools. Everything stays on your device.
                     </p>
 
@@ -146,7 +146,7 @@ export default function LandingPage() {
                         <div className="mt-6 space-y-5 text-sm text-vex-muted">
                             <div className="flex items-start gap-4">
                                 <span className="text-vex-primary text-xs font-semibold">01</span>
-                                <p>Paste a playlist URL and VexTube loads the playlist in a focused player.</p>
+                                <p>Paste a playlist URL and FocusTube loads the playlist in a focused player.</p>
                             </div>
                             <div className="flex items-start gap-4">
                                 <span className="text-vex-primary text-xs font-semibold">02</span>
@@ -176,7 +176,7 @@ export default function LandingPage() {
                     <span>Focus. Review. Repeat.</span>
                     <div className="flex items-center gap-4">
                         <Link
-                            href="https://github.com/sanjeevafk/VexTube"
+                            href="https://github.com/sanjeevafk/ytwins"
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-2 text-vex-muted hover:text-white transition-colors"
@@ -184,7 +184,7 @@ export default function LandingPage() {
                             <Github className="w-4 h-4" />
                             GitHub
                         </Link>
-                        <Link href="/app" className="text-vex-primary hover:text-vex-primaryHover">Launch VexTube</Link>
+                        <Link href="/app" className="text-vex-primary hover:text-vex-primaryHover">Launch FocusTube</Link>
                     </div>
                 </div>
             </footer>

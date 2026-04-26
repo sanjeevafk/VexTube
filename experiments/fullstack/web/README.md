@@ -1,4 +1,4 @@
-# VexTube
+# FocusTube
 
 A local-first YouTube learning studio for focused viewing, structured notes, and deliberate review.
 
@@ -37,7 +37,7 @@ A local-first YouTube learning studio for focused viewing, structured notes, and
 
 ## Architecture
 
-VexTube is local-first. The only server activity is the YouTube metadata proxy. All learning data, notes, and review state live in the browser.
+FocusTube is local-first. The only server activity is the YouTube metadata proxy. All learning data, notes, and review state live in the browser.
 
 ```mermaid
 flowchart LR

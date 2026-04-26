@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { StoredNote } from '@/lib/notes';
 import { getInitialReviewData, scheduleNextReview, type ReviewData } from '@/lib/spacedRepetition';
 
-const REVIEW_KEY = 'vextube_review_data';
+const REVIEW_KEY = 'focustube_review_data';
 
 type ReviewMap = Record<string, ReviewData>;
 
@@ -12,7 +12,8 @@ const loadReviewData = (): ReviewMap => {
     if (typeof window === 'undefined') return {};
     try {
         const raw = localStorage.getItem(REVIEW_KEY);
-        return raw ? (JSON.parse(raw) as ReviewMap) : {};
+        if (raw) return JSON.parse(raw) as ReviewMap;
+        return {};
     } catch {
         return {};
     }

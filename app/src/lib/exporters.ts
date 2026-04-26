@@ -76,7 +76,7 @@ export const exportAsMarkdown = (): ExportPayload | null => {
     if (notes.length === 0 && !storage) return null;
 
     const lines: string[] = [];
-    lines.push('# VexTube Notes Export');
+    lines.push('# FocusTube Notes Export');
     lines.push('');
     lines.push(`Generated: ${new Date().toLocaleString()}`);
     lines.push('');
@@ -110,7 +110,7 @@ export const exportAsMarkdown = (): ExportPayload | null => {
 
     return {
         content: lines.join('\n'),
-        filename: `vextube-export-${Date.now()}.md`,
+        filename: `focustube-export-${Date.now()}.md`,
         mimeType: 'text/markdown',
     };
 };
@@ -147,7 +147,7 @@ export const exportAsHTML = (): ExportPayload | null => {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VexTube Export</title>
+<title>FocusTube Export</title>
 <style>
 body { font-family: Arial, sans-serif; background: #0f0f0f; color: #f1f1f1; margin: 0; padding: 32px; }
 h1 { margin-bottom: 12px; }
@@ -157,7 +157,7 @@ pre { white-space: pre-wrap; background: #0c0c0c; padding: 12px; border-radius: 
 </style>
 </head>
 <body>
-<h1>VexTube Notes Export</h1>
+<h1>FocusTube Notes Export</h1>
 <p>Generated: ${escapeHtml(new Date().toLocaleString())}</p>
 ${noteSections}
 ${storageSection}
@@ -166,7 +166,7 @@ ${storageSection}
 
     return {
         content: html,
-        filename: `vextube-export-${Date.now()}.html`,
+        filename: `focustube-export-${Date.now()}.html`,
         mimeType: 'text/html',
     };
 };
@@ -184,7 +184,7 @@ export const exportAsJSON = (): ExportPayload | null => {
 
     return {
         content: JSON.stringify(payload, null, 2),
-        filename: `vextube-export-${Date.now()}.json`,
+        filename: `focustube-export-${Date.now()}.json`,
         mimeType: 'application/json',
     };
 };

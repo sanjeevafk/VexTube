@@ -26,6 +26,10 @@ import { loadStoredNotes, type StoredNote } from '@/lib/notes';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
+const RIGHT_SIDEBAR_KEY = 'focustube_right_sidebar_width';
+const LEFT_SIDEBAR_KEY = 'focustube_left_sidebar_width';
+const REVIEW_KEY = 'focustube_review_data';
+
 export default function AppPage() {
     const playerRef = useRef<{
         getPlayerState?: () => number;
@@ -74,8 +78,7 @@ export default function AppPage() {
                 playbackSpeed: saved.playbackSpeed ?? 1,
             }));
         }
-        // Load right sidebar width
-        const storedRightWidth = localStorage.getItem('vextube_right_sidebar_width');
+        const storedRightWidth = localStorage.getItem(RIGHT_SIDEBAR_KEY);
         if (storedRightWidth) {
             setRightSidebarWidth(Math.min(Math.max(parseInt(storedRightWidth, 10), 280), 500));
         }
@@ -109,7 +112,7 @@ export default function AppPage() {
         const handleMouseUp = () => {
             if (isResizingRight) {
                 setIsResizingRight(false);
-                localStorage.setItem('vextube_right_sidebar_width', rightSidebarWidth.toString());
+                localStorage.setItem(RIGHT_SIDEBAR_KEY, rightSidebarWidth.toString());
             }
         };
 
@@ -266,7 +269,7 @@ export default function AppPage() {
         clearStorage();
         saveCollections([]);
         savePlaylistMeta({});
-        localStorage.removeItem('vextube_review_data');
+        localStorage.removeItem(REVIEW_KEY);
         setPlaylistData({
             videos: [],
             currentIndex: 0,
@@ -405,20 +408,20 @@ export default function AppPage() {
                 defaultWidth={256}
                 minWidth={200}
                 maxWidth={400}
-                storageKey="vextube_left_sidebar_width"
+                storageKey={LEFT_SIDEBAR_KEY}
                 className="hidden md:flex flex-col border-r border-vex-border bg-vex-bg h-full shrink-0 z-20"
             >
                 <div className="flex flex-col h-full p-6">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 mb-10 hover:opacity-80 transition-opacity">
                         <Image
-                            src="/logo.jpg"
-                            alt="VexTube Logo"
+                            src="/logo.png"
+                            alt="FocusTube Logo"
                             width={32}
                             height={32}
                             className="rounded-lg"
                         />
-                        <span className="font-bold text-xl tracking-tight">VexTube</span>
+                        <span className="font-bold text-xl tracking-tight">FocusTube</span>
                     </Link>
 
                     {/* Navigation or Notes Panel */}
@@ -519,13 +522,13 @@ export default function AppPage() {
                 <header className="md:hidden h-14 shrink-0 border-b border-vex-border flex items-center justify-between px-4 bg-vex-bg/95 backdrop-blur z-20">
                     <Link href="/" className="flex items-center gap-2">
                         <Image
-                            src="/logo.jpg"
-                            alt="VexTube"
+                            src="/logo.png"
+                            alt="FocusTube"
                             width={24}
                             height={24}
                             className="rounded"
                         />
-                        <span className="font-bold text-lg tracking-tight">VexTube</span>
+                        <span className="font-bold text-lg tracking-tight">FocusTube</span>
                     </Link>
                     <div className="flex items-center gap-2">
                         <FocusTimer compact />

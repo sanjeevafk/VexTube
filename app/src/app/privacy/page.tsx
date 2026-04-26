@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Privacy Policy - VexTube',
-    description: 'Privacy Policy for VexTube application',
+    title: 'Privacy Policy - FocusTube',
+    description: 'Privacy Policy for FocusTube application',
 };
 
 export default function PrivacyPage() {
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
             {/* Footer */}
             <footer className="border-t border-gray-800 py-8 mt-12">
                 <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-                    © 2026 VexTube. All rights reserved.
+                    © 2026 FocusTube. All rights reserved.
                 </div>
             </footer>
         </div>

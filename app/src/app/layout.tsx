@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "VexTube",
+  title: "FocusTube",
   description: "A focused learning experience for YouTube playlists",
 };
 

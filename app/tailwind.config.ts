@@ -11,7 +11,7 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // VexTube Design System
+                // FocusTube Design System
                 vex: {
                     bg: '#0A0A0A',
                     surface: '#151515',

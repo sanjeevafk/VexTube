@@ -15,8 +15,8 @@ export type PlaylistMeta = {
     updatedAt: number;
 };
 
-const COLLECTIONS_KEY = 'vextube_collections';
-const PLAYLIST_META_KEY = 'vextube_playlist_meta';
+const COLLECTIONS_KEY = 'focustube_collections';
+const PLAYLIST_META_KEY = 'focustube_playlist_meta';
 
 const safeParse = <T>(raw: string | null, fallback: T): T => {
     if (!raw) return fallback;
@@ -29,7 +29,8 @@ const safeParse = <T>(raw: string | null, fallback: T): T => {
 
 export const loadCollections = (): Collection[] => {
     if (typeof window === 'undefined') return [];
-    return safeParse<Collection[]>(localStorage.getItem(COLLECTIONS_KEY), []);
+    const raw = localStorage.getItem(COLLECTIONS_KEY);
+    return safeParse<Collection[]>(raw, []);
 };
 
 export const saveCollections = (collections: Collection[]) => {
@@ -39,7 +40,8 @@ export const saveCollections = (collections: Collection[]) => {
 
 export const loadPlaylistMeta = (): Record<string, PlaylistMeta> => {
     if (typeof window === 'undefined') return {};
-    return safeParse<Record<string, PlaylistMeta>>(localStorage.getItem(PLAYLIST_META_KEY), {});
+    const raw = localStorage.getItem(PLAYLIST_META_KEY);
+    return safeParse<Record<string, PlaylistMeta>>(raw, {});
 };
 
 export const savePlaylistMeta = (meta: Record<string, PlaylistMeta>) => {

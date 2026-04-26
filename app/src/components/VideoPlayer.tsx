@@ -107,6 +107,7 @@ export const VideoPlayer = ({
     return (
         <div ref={containerRef} className={`w-full space-y-4 ${isFullscreen ? 'fixed inset-0 bg-black z-50 p-4' : ''}`}>
             <div className="relative aspect-video w-full bg-black rounded-xl overflow-hidden shadow-xl group">
+                {/* TODO: Add a user-facing error state for YouTube embed failures (region-locked, deleted, or embedding disabled). */}
                 <YouTube
                     videoId={video.id}
                     className="w-full h-full"

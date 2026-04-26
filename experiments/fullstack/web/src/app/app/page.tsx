@@ -73,7 +73,7 @@ export default function AppPage() {
             }
 
             // Load right sidebar width
-            const storedRightWidth = localStorage.getItem('vextube_right_sidebar_width');
+            const storedRightWidth = localStorage.getItem('focustube_right_sidebar_width');
             if (storedRightWidth) {
                 setRightSidebarWidth(Math.min(Math.max(parseInt(storedRightWidth, 10), 280), 500));
             }
@@ -112,7 +112,7 @@ export default function AppPage() {
         const handleMouseUp = () => {
             if (isResizingRight) {
                 setIsResizingRight(false);
-                localStorage.setItem('vextube_right_sidebar_width', rightSidebarWidth.toString());
+                localStorage.setItem('focustube_right_sidebar_width', rightSidebarWidth.toString());
             }
         };
 
@@ -343,7 +343,7 @@ export default function AppPage() {
                 defaultWidth={256}
                 minWidth={200}
                 maxWidth={400}
-                storageKey="vextube_left_sidebar_width"
+                storageKey="focustube_left_sidebar_width"
                 className="hidden md:flex flex-col border-r border-vex-border bg-vex-bg h-full shrink-0 z-20"
             >
                 <div className="flex flex-col h-full p-6">
